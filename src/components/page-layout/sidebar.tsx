@@ -5,9 +5,12 @@ export default function PageLayoutSidebar() {
       <div className="drawer-side">
         <label htmlFor="drawer" className="drawer-overlay" aria-label="Close menu"></label>
         <aside className="bg-base-100 min-h-screen w-[260px]">
-          <h1 className="text-2xl px-4 navbar sticky tracking-tight font-medium">
-            DevQuota
-          </h1>
+          <span className="flex items-center gap-2 px-4 navbar sticky">
+            <img src="/icon.svg" className="size-8" />
+            <h1 className="text-2xl tracking-tight font-medium leading-none">
+              DevQuota
+            </h1>
+          </span>
           <ul className="menu w-full px-4">
             <li>
               <a>

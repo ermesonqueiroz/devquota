@@ -63,11 +63,21 @@ export default function App() {
     <PageLayout.Root>
       <PageLayout.Sidebar />
       <div className="relative max-w-screen drawer-content">
-        <form className="flex navbar z-1 bg-base-100 drop-shadow-sm w-full items-center" onSubmit={handlePlayTimer}>
+        <div className="navbar bg-base-100 flex items-center lg:hidden">
+          <label aria-label="Open menu" htmlFor="drawer" className="btn btn-square btn-ghost drawer-button">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </label>
+          <h1 className="text-2xl px-4 tracking-tight font-medium leading-none">
+            DevQuota
+          </h1>
+        </div>
+        <form className="flex navbar z-1 bg-base-100 w-full items-center overflow-x-scroll lg:overflow-visible" onSubmit={handlePlayTimer}>
           <input
             type="text"
             placeholder="Em que você está trabalhando?"
-            className="input input-ghost text-base w-full px-6 h-full focus:outline-none"
+            className="input input-ghost text-base w-full px-2 lg:px-6 h-full focus:outline-none min-w-[260px]"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             readOnly={timer.isRunning}
@@ -139,9 +149,9 @@ export default function App() {
             )}
           </div>
         </form>
-        <div className="pt-6 pb-16">
+        <div className="pt-8 pb-16">
           {groupedTimeEntries.length >= 1 ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
               {groupedTimeEntries.map(({ date, entries, total }) => (
                 <ul className="list bg-base-100" key={date}>
                   <li className="p-4 pb-2 flex justify-between items-center">
