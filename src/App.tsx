@@ -1,79 +1,67 @@
 import { useState } from 'react'
 import { useProjects } from './contexts/projects-context'
 import { useStopwatch } from './hooks/stopwatch'
-import Sidebar from './components/Sidebar'
 import { useTimeEntries } from './contexts/time-entries-context'
-import { formatRelativeDate } from './lib/date'
-import "cally"
+import { formatRelativeDate, formatTime } from './lib/date'
 import { TimeButton } from "./components/time-button"
+import { PageLayout } from "./components/page-layout"
+import "cally"
+import type { TimeEntry } from "./types/time-entry"
 
 export default function App() {
   const { projects } = useProjects()
   const { addTimeEntry, groupedTimeEntries } = useTimeEntries()
   const timer = useStopwatch()
+
   const [selectedProject, setSelectedProject] = useState<null | string>(null)
   const [description, setDescription] = useState('')
   const [startDate, setStartDate] = useState<number | null>(null)
   const [endDate, setEndDate] = useState<number | null>(null)
 
-  function formatTime(milliseconds: number): string {
-    if (isNaN(milliseconds) || milliseconds < 0) {
-      return "00:00:00";
-    }
-
-    const totalSeconds = Math.floor(milliseconds / 1000);
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    const formattedHours = String(hours).padStart(1, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
-
-    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+  function getNow() {
+    const date = new Date()
+    date.setSeconds(0)
+    date.setMilliseconds(0)
+    return date.getTime()
+  }
+ 
+  function saveTimeEntry(timeEntry: TimeEntry) {
+    addTimeEntry(timeEntry)
+    
+    setStartDate(null)
+    setEndDate(null)
+    setDescription('')
   }
 
   function handleStopTimer() {
     const { startedAt, endedAt } = timer.stop()
-    setStartDate(startedAt)
-    setEndDate(endedAt)
-    addTimeEntry({
+    saveTimeEntry({
       description,
       project: selectedProject,
       startedAt,
       endedAt,
     })
-
-    setDescription('')
   }
 
   function handlePlayTimer(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!!description) {
-      if (!!startDate && !!endDate) {
-        addTimeEntry({
-          description,
-          project: selectedProject,
-          startedAt: startDate,
-          endedAt: endDate,
-        })
+    if (!description) return
 
-        return
-      }
-
-      timer.start()
+    if (!!startDate && !!endDate) {
+      return saveTimeEntry({
+        description,
+        project: selectedProject,
+        startedAt: startDate,
+        endedAt: endDate,
+      })
     }
-  }
 
-  function handleUpdateTime(startDate: Date | null, endDate: Date | null) {
-    setStartDate(startDate!.getTime())
-    setEndDate(endDate!.getTime())
+    timer.start(startDate ?? Date.now())
   }
 
   return (
-    <div className="drawer lg:drawer-open bg-base-300">
-      <Sidebar />
+    <PageLayout.Root>
+      <PageLayout.Sidebar />
       <div className="relative max-w-screen drawer-content">
         <form className="flex navbar z-1 bg-base-100 drop-shadow-sm w-full items-center" onSubmit={handlePlayTimer}>
           <input
@@ -116,8 +104,19 @@ export default function App() {
                 ))}
               </ul>
             </div>
-            <TimeButton onUpdate={handleUpdateTime}>
-              <span>{!!startDate ? formatTime((endDate ?? Date.now()) - startDate) : '0:00:00'}</span>
+            <TimeButton
+              startDate={startDate}
+              endDate={endDate}
+              onChangeStartDate={(value) => setStartDate(value)}
+              onChangeEndDate={(value) => setEndDate(value)}
+            >
+              <span>
+                {
+                  timer.isRunning
+                    ? formatTime(timer.time)
+                    : formatTime((endDate ?? getNow()) - (startDate ?? getNow()))
+                }
+              </span>
             </TimeButton>
             {!timer.isRunning ? !!startDate && !!endDate ? (
               <button className="btn btn-circle btn-primary" type="submit">
@@ -128,13 +127,13 @@ export default function App() {
             ) : (
               <button className="btn btn-circle btn-primary" type="submit">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
-                  <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                  <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
                 </svg>
               </button>
             ) : (
               <button className="btn btn-circle btn-error" type="button" onClick={handleStopTimer}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
-                  <path fill-rule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clip-rule="evenodd" />
+                  <path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" />
                 </svg>
               </button>
             )}
@@ -171,6 +170,6 @@ export default function App() {
           )}
         </div>
       </div>
-    </div>
+    </PageLayout.Root>
   )
 }

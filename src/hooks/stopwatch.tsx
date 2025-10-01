@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 interface StopwatchControls {
   time: number
   isRunning: boolean
-  start: () => void
+  start: (startedAt: number) => void
   stop: () => {
     startedAt: number
     endedAt: number
@@ -17,23 +17,14 @@ export const useStopwatch = (): StopwatchControls => {
   const startedAtRef = useRef<number | null>(null)
   const intervalRef = useRef<number | null>(null)
 
-  useEffect(() => {
-    if (isRunning) {
-      const startTime = Date.now() - time
-      intervalRef.current = window.setInterval(() => {
-        setTime(Date.now() - startTime)
-      }, 1000)
-    }
+  function updateTime() {
+    setTime(Date.now() - startedAtRef.current!)
+  }
 
-    return () => {
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current)
-      }
-    }
-  }, [isRunning, time])
+  function start(startedAt: number): void {
+    startedAtRef.current = startedAt
+    updateTime()
 
-  const start = (): void => {
-    startedAtRef.current = Date.now()
     if (!isRunning) {
       setIsRunning(true)
     }
@@ -48,6 +39,17 @@ export const useStopwatch = (): StopwatchControls => {
       endedAt: Date.now()
     }
   }
+
+  useEffect(() => {
+    if (!isRunning) return
+    intervalRef.current = window.setInterval(updateTime, 100)
+
+    return () => {
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current)
+      }
+    }
+  }, [isRunning, time])
 
   return {
     time,

@@ -1,43 +1,52 @@
-import React, { useEffect } from "react"
+import React, { useMemo } from "react"
 import { format, parse } from "date-fns"
 import { useState } from "react"
 
 interface TimeButtonProps {
   children: React.ReactNode
-  onUpdate?: (startDate: Date | null, endDate: Date | null) => void
+  startDate: number | null
+  endDate: number | null
+  onChangeStartDate?: (startDate: number | null) => void
+  onChangeEndDate?: (endDate: number | null) => void
 }
 
-export function TimeButton({ children, onUpdate }: TimeButtonProps) {
+export function TimeButton({ children, startDate, endDate, onChangeStartDate, onChangeEndDate }: TimeButtonProps) {
   const [date, setDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'))
-  const [startTime, setStartTime] = useState<string>('')
-  const [endTime, setEndTime] = useState<string>('')
+
+  const startTime = useMemo(() => startDate ? format(startDate, 'HH:mm') : '', [startDate])
+  const endTime = useMemo(() => endDate ? format(endDate, 'HH:mm') : '', [endDate])
 
   function handleUpdateDate(e: Event) {
     const dateString = (e.target as HTMLInputElement).value
     setDate(dateString)
   }
 
-  useEffect(() => {
-    if (!date || !startTime || !endTime || !onUpdate) return
+  function extractTime(timeString: string): number {
+    const splittedTime = timeString.split(':').map(Number)
+    const [hour, minute] = splittedTime
+    const dateCopy = parse(date, 'yyyy-MM-dd', new Date())
+    dateCopy.setHours(hour, minute, 0, 0)
+    return dateCopy.getTime()
+  }
 
-    const [startHour, startMinute] = startTime.split(':').map(Number)
-    const [endHour, endMinute] = endTime.split(':').map(Number)
+  function handleUpdateStartDate(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!onChangeStartDate) return
+    const time = extractTime(event.target.value)
+    onChangeStartDate(time)
+  }
 
-    const finalStartDate = parse(date, 'yyyy-MM-dd', new Date())
-    finalStartDate.setHours(startHour, startMinute, 0, 0)
-
-    const finalEndDate = parse(date, 'yyyy-MM-dd', new Date())
-    finalEndDate.setHours(endHour, endMinute, 0, 0)
-
-    onUpdate(finalStartDate, finalEndDate)
-  }, [date, startTime, endTime])
+  function handleUpdateEndDate(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!onChangeEndDate) return
+    const time = extractTime(event.target.value)
+    onChangeEndDate(time)
+  }
   
   return (
     <div className="dropdown dropdown-end cursor-default">
       <div tabIndex={0} role="button" className="btn btn-ghost w-[90px] p-0 mr-2">
         {children}
       </div>
-      <div tabIndex={0} className="dropdown-content bg-base-100 w-[300px] rounded-box mt-4 shadow-sm">
+      <div tabIndex={0} className="dropdown-content bg-base-100 w-[300px] rounded-box mt-4 drop-shadow-lg">
         <calendar-date
           value={date}
           onchange={handleUpdateDate}
@@ -55,7 +64,7 @@ export function TimeButton({ children, onUpdate }: TimeButtonProps) {
               type="time"
               className="input"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={handleUpdateStartDate}
             />
           </fieldset>
           <fieldset className="fieldset py-2 px-3">
@@ -64,7 +73,7 @@ export function TimeButton({ children, onUpdate }: TimeButtonProps) {
               type="time"
               className="input"
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
+              onChange={handleUpdateEndDate}
             />
           </fieldset>
         </div>

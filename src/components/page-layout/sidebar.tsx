@@ -1,4 +1,4 @@
-export default function Sidebar() {
+export default function PageLayoutSidebar() {
   return (
     <>
       <input id="drawer" type="checkbox" className="drawer-toggle" />
