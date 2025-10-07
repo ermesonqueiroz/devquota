@@ -2,9 +2,10 @@
 
 @import "tailwindcss";
 @plugin "daisyui"{
-  themes: all;
+  themes: light --default, dark --prefersdark;
 }
 
 :root {
+  @apply bg-base-300;
   font-family: 'Outfit', sans-serif;
 }
